@@ -2,10 +2,15 @@ from tkinter import *
 
 # create window
 window = Tk()
-var = IntVar()
 window.title("HSD Comment Generator")
 # window.geometry("600x600")
 
+# vars for radio and check buttons
+var = IntVar()
+varApplied = IntVar()
+varIFWI = IntVar()
+varEC = IntVar()
+varVideo = IntVar()
 
 # type of comment prompt
 labelCommentType = Label(window, text="1. Choose comment type ", font=("Helvetica, 14"))
@@ -48,6 +53,72 @@ def selectRadio():
 	else:
 		print("Something went wrong")
 
+def createComment():
+	# delete all text in comment field
+	generatedText.delete(1.0, END)
+
+	# create complete comment
+	if var.get() == 1:
+		comment = "***COMPLETE***\n"
+
+		# add applied reworks if checked
+		if varApplied.get() == 1:
+
+			# add applied reworks if the field isn't empty
+			if entryApplied.get() != "":
+				reworks = entryApplied.get()
+				comment += "Reworks %s applied\n" % reworks
+			else:
+				comment += "Required reworks applied\n"
+		else:
+			comment += "Up-to-date on required reworks\n"
+
+		# add IFWI and EC messages based on checks
+		if varIFWI.get() == 1:
+			if varEC.get() == 1:
+				comment += "IFWI and EC flashed\n"
+			else:
+				comment += "IFWI flashed\n"
+		elif varEC.get() == 1:
+			comment += "EC flashed\n"
+
+		# add video outputs if checked
+		if varVideo.get() == 1:
+			comment += "Boots to shell"
+			if entryVideo.get() != "":
+				video = entryVideo.get()
+				comment += ", video through %s\n" % video
+			else:
+				comment += "\n"
+
+		# ending text
+		comment += "Records updated in ISMP\nReady for pickup at HF1 inventroy cage\n"
+	
+	# create rework comment
+	elif var.get() == 2:
+		comment = "Submitted for required reworks"
+		if entryReworkTicketNumber.get() != "":
+			ticketNum = entryReworkTicketNumber.get()
+			comment += " https://linkgoeshere.com/%s\n" % ticketNum
+		else:
+			comment += "\n"
+
+	# create other comment
+	elif var.get() == 3:
+		comment = "Other comments go here\n"
+	
+	# no comment type was selected
+	else:
+		comment = "No comment type selected\n"
+
+	# populate created comment to form
+	generatedText.insert(INSERT, comment)
+
+def copyToClipboard():
+	copyText = generatedText.get()
+	window.clipboard_clear()
+	window.clipboard_append("copyText")
+
 # type of comment choices
 radioComplete = Radiobutton(window, text="Completed", variable=var, value=1, command=selectRadio)
 radioReworks = Radiobutton(window, text="Sent for reworks", variable=var, value=2, command=selectRadio)
@@ -58,30 +129,22 @@ radioOther.grid(column=0, row=8, sticky="w")
 
 # COMPLETE CHOICES
 # reworks applied
-checkAppliedState = BooleanVar()
-checkAppliedState.set(False)
-checkApplied = Checkbutton(window, text="Reworks applied", var=checkAppliedState)
+checkApplied = Checkbutton(window, text="Reworks applied", variable=varApplied)
 checkApplied.grid(column=1, row=1, sticky="w")
 
 entryApplied = Entry(window, width=40)
 entryApplied.grid(column=2, row=1, sticky="w")
 	
 # flashed ifwi
-checkIfwiState = BooleanVar()
-checkIfwiState.set(False)
-checkIfwi = Checkbutton(window, text="IFWI flashed", var=checkIfwiState)
+checkIfwi = Checkbutton(window, text="IFWI flashed", variable=varIFWI)
 checkIfwi.grid(column=1, row=2, sticky="w")	
 	
 # flashed ec
-checkEcState = BooleanVar()
-checkEcState.set(False)
-checkEc = Checkbutton(window, text="EC flashed", var=checkEcState)
+checkEc = Checkbutton(window, text="EC flashed", variable=varEC)
 checkEc.grid(column=1, row=3, sticky="w")
 	
 # video outputs
-checkVideoState = BooleanVar()
-checkVideoState.set(False)
-checkVideo = Checkbutton(window, text="Video outputs", var=checkVideoState)
+checkVideo = Checkbutton(window, text="Video outputs", variable=varVideo)
 checkVideo.grid(column=1, row=4, sticky="w")
 	
 entryVideo = Entry(window, width=40)
@@ -102,11 +165,11 @@ labelOther = Label(window, text="One-offs will go here")
 labelOther.grid(columnspan=2, column=1, row=8)
 
 # generate button
-generate = Button(window, text="Generate comment", width=80)
+generate = Button(window, text="Generate comment", width=80, command=createComment)
 generate.grid(columnspan=2, column=0, row=10)
 
 # Copy to clipboard button
-copyButton = Button(window, text="Copy comment to clipboard", width=40)
+copyButton = Button(window, text="Copy comment to clipboard", width=40, command=copyToClipboard)
 copyButton.grid(columnspan=1, column=2, row=10)
 
 # text generation field
